@@ -3,8 +3,6 @@
 // UI for calculating power factor
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-
 import 'calculator/calculator_controller.dart';
 import 'calculator/calculator_screen.dart';
 
