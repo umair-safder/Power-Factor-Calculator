@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'calculator/calculator_controller.dart';
 import 'calculator/calculator_screen.dart';
+import "package:get/get.dart";
 
 void main() {
   runApp(const PowerFactorApp());
