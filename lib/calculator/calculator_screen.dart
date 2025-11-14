@@ -104,16 +104,11 @@ class CalculatorScreen extends GetView<PowerFactorController> {
   }
 }
 
-// -------------------------------------------------------------------------
-// NEW WIDGET: HistoryList (Fixed for Null Check Error)
-// -------------------------------------------------------------------------
-
 class HistoryList extends GetView<PowerFactorController> {
   const HistoryList({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Obx listens to the controller.history list and rebuilds when data arrives
     return Obx(() {
       if (controller.history.isEmpty) {
         return const Center(
@@ -133,21 +128,18 @@ class HistoryList extends GetView<PowerFactorController> {
           final result = controller.history[index];
 
           // CRITICAL FIX: Create safe local strings before interpolation
-          final pf = result.powerFactor?.toStringAsFixed(3) ?? 'N/A';
+          final pf = result.powerFactor?.toStringAsFixed(2) ?? 'N/A';
           final realP = result.realPower?.toStringAsFixed(2) ?? 'N/A';
           final currentI = result.current?.toStringAsFixed(2) ?? 'N/A';
+          final ap= result.apparentPower?.toStringAsFixed(1) ?? 'N/A';
+          final rp= result.reactivePower?.toStringAsFixed(1)?? 'N/A';
 
           return Card(
-            elevation: 1,
+            color: Colors.tealAccent,
             margin: const EdgeInsets.only(bottom: 8),
             child: ListTile(
-              title: Text(
-                'PF: $pf', // Use the safe local variable
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                // Use the safe local variables
-                'P: $realP W | I: $currentI A',
+              title: Text('Power Factor: $pf\nApperant Power(S): $ap VA\nReactive Power(Q): $rp VAR',style: const TextStyle(fontWeight: FontWeight.bold),),
+              subtitle: Text('Power: $realP W | Current: $currentI A',
               ),
             ),
           );

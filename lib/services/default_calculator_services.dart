@@ -57,10 +57,10 @@ class DefaultCalculatorService implements ICalculatorService {
   // Implementation of abstract method: Classification
   @override
   String classifyPowerFactor(double powerFactor) {
-    if (powerFactor >= 0.95) return 'Excellent';
-    if (powerFactor >= 0.9) return 'Good';
+    if (powerFactor >= 0.9) return 'Perfect';
     if (powerFactor >= 0.8) return 'Fair';
-    return 'Poor';
+    if (powerFactor >= 0.6) return 'Bad';
+    return 'Very Bad';
   }
 
   // Implementation of abstract method: Interpretation

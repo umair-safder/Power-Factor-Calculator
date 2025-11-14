@@ -18,6 +18,7 @@ class CalculatorResultCard extends StatelessWidget {
     final hasMetrics = controller.hasMetrics && result != null;
 
     return Card(
+      color: Colors.tealAccent,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -163,23 +164,24 @@ class _ResultSummary extends StatelessWidget {
         SizedBox(
           width: 140,
           height: 140,
-          child: Stack(
-            alignment: Alignment.center,
+          child: Row(
             children: [
-              CircularProgressIndicator(value: pf, strokeWidth: 12),
-              Column(
-                mainAxisSize: MainAxisSize.min,
+              Text(pf.toStringAsFixed(2),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(width: 12,),
+              Stack(
                 children: [
-                  Text(
-                    pf.toStringAsFixed(3),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  CircularProgressIndicator(value: pf, strokeWidth: 5,color: Colors.green,),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12,left: 5),
+                    child: Text(
+                      '${percent.toStringAsFixed(1)} %',
+                      style: const TextStyle(fontSize: 8,fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  Text(
-                    '${percent.toStringAsFixed(1)} %',
-                    style: const TextStyle(fontSize: 12),
                   ),
                 ],
               ),

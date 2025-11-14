@@ -36,7 +36,7 @@ class PowerFactorApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Power Factor Calculator',
-      theme: ThemeData(primarySwatch: Colors.indigo, useMaterial3: true),
+      theme: ThemeData(scaffoldBackgroundColor: Colors.white),
       initialBinding: BindingsBuilder(
             () {
           // --- Dependency Injection Setup ---
