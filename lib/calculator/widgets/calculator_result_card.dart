@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/i_calculator_services.dart';
 import '../calculator_controller.dart';
 import '../calculator_model.dart';
 
@@ -29,10 +30,12 @@ class CalculatorResultCard extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Column(
+
+            // FIX: Use LayoutBuilder to handle bounded/unbounded height constraints
+            LayoutBuilder(
+              builder: (context, constraints) {
+                // The actual content column for the results
+                final resultContent = Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: _buildResultDetails(
                     hasPowerFactor: controller.hasPowerFactor,
@@ -40,9 +43,25 @@ class CalculatorResultCard extends StatelessWidget {
                     result: result,
                     hasMetrics: hasMetrics,
                     note: note,
+                    // PASS THE SERVICE: Pass the service down to the detail builder
+                    calculatorService: controller.service,
                   ),
-                ),
-              ),
+                );
+
+                // Check if the parent provided a finite height (occurs in wide screen Expanded widget)
+                if (constraints.maxHeight.isFinite) {
+                  // Bounded Height (Wide Layout): Use Flexible + SingleChildScrollView
+                  return Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: resultContent,
+                    ),
+                  );
+                } else {
+                  // Unbounded Height (Narrow Layout inside a ListView): Return content directly
+                  return resultContent;
+                }
+              },
             ),
           ],
         ),
@@ -50,28 +69,31 @@ class CalculatorResultCard extends StatelessWidget {
     );
   }
 
+  // MODIFIED: Added required parameter for ICalculatorService
   List<Widget> _buildResultDetails({
     required bool hasPowerFactor,
     required double? powerFactorValue,
     required PowerFactorResult? result,
     required bool hasMetrics,
     required String? note,
+    required ICalculatorService calculatorService, // NEW: Service parameter
   }) {
     final widgets = <Widget>[
       Center(
         child: !hasPowerFactor || powerFactorValue == null
             ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.info_outline, size: 48),
-                  const SizedBox(height: 8),
-                  Text(
-                    note ?? 'No calculation yet',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              )
-            : _ResultSummary(powerFactorValue),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.info_outline, size: 48),
+            const SizedBox(height: 8),
+            Text(
+              note ?? 'No calculation yet',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        )
+        // UPDATED: Pass the service to _ResultSummary
+            : _ResultSummary(powerFactorValue, calculatorService),
       ),
     ];
 
@@ -84,7 +106,8 @@ class CalculatorResultCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              'Current I: ${PowerFactorCalculator.formatNumber(result.current!)} A',
+              // UPDATED: Use the service for number formatting
+              'Current I: ${calculatorService.formatNumber(result.current!)} A',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),
@@ -92,7 +115,8 @@ class CalculatorResultCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              'Apparent Power S: ${PowerFactorCalculator.formatNumber(result.apparentPower!)} VA',
+              // UPDATED: Use the service for number formatting
+              'Apparent Power S: ${calculatorService.formatNumber(result.apparentPower!)} VA',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),
@@ -100,7 +124,8 @@ class CalculatorResultCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              'Reactive Power Q: ${PowerFactorCalculator.formatNumber(result.reactivePower!)} VAR',
+              // UPDATED: Use the service for number formatting
+              'Reactive Power Q: ${calculatorService.formatNumber(result.reactivePower!)} VAR',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),
@@ -119,16 +144,18 @@ class CalculatorResultCard extends StatelessWidget {
 }
 
 class _ResultSummary extends StatelessWidget {
-  const _ResultSummary(this.pf);
+  // MODIFIED: Constructor now accepts ICalculatorService
+  const _ResultSummary(this.pf, this.service);
 
   final double pf;
+  final ICalculatorService service; // NEW: The service instance
 
   @override
   Widget build(BuildContext context) {
-    final percent = PowerFactorCalculator.powerFactorToPercent(pf);
-    final classification = PowerFactorCalculator.classifyPowerFactor(pf);
-    final interpretation =
-        PowerFactorCalculator.getPowerFactorInterpretation(pf);
+    // UPDATED: Call methods on the service instance
+    final percent = service.powerFactorToPercent(pf);
+    final classification = service.classifyPowerFactor(pf);
+    final interpretation = service.getPowerFactorInterpretation(pf);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -173,4 +200,3 @@ class _ResultSummary extends StatelessWidget {
     );
   }
 }
-

@@ -1,5 +1,9 @@
+// lib/calculator/calculator_model.dart
+
 import 'dart:math' as math;
 
+/// --- 1. Input Model ---
+/// Data class to hold the raw user input values.
 class PowerFactorInput {
   const PowerFactorInput({
     required this.realPower,
@@ -12,6 +16,9 @@ class PowerFactorInput {
   final double powerFactor;
 }
 
+/// --- 2. Result Model ---
+/// Data class to hold the calculated results and notes.
+/// Includes methods for Firestore serialization/deserialization.
 class PowerFactorResult {
   const PowerFactorResult({
     this.powerFactor,
@@ -31,11 +38,39 @@ class PowerFactorResult {
 
   bool get hasMetrics =>
       current != null || apparentPower != null || reactivePower != null;
+
+  /// Factory constructor to create a result object from a Firestore Map.
+  factory PowerFactorResult.fromMap(Map<String, dynamic> map) {
+    return PowerFactorResult(
+      powerFactor: (map['powerFactor'] as num?)?.toDouble(),
+      realPower: (map['realPower'] as num?)?.toDouble(),
+      apparentPower: (map['apparentPower'] as num?)?.toDouble(),
+      current: (map['current'] as num?)?.toDouble(),
+      reactivePower: (map['reactivePower'] as num?)?.toDouble(),
+      note: map['note'] as String?,
+    );
+  }
+
+  /// Method for converting the object to a Firestore Map.
+  Map<String, dynamic> toMap() {
+    return {
+      'powerFactor': powerFactor,
+      'realPower': realPower,
+      'apparentPower': apparentPower,
+      'current': current,
+      'reactivePower': reactivePower,
+      'note': note,
+    };
+  }
 }
 
+/// --- 3. Deprecated Static Calculator (Retained temporarily for UI compatibility) ---
+/// NOTE: The core logic has been moved to DefaultCalculatorService.
+/// This class will eventually be removed once all UI widgets are updated.
 class PowerFactorCalculator {
   const PowerFactorCalculator._();
 
+  // Helper method to satisfy existing Controller code (calls the old static logic)
   static PowerFactorResult calculate(PowerFactorInput input) {
     return calculateFromPVandCos(
       input.realPower,
@@ -45,35 +80,29 @@ class PowerFactorCalculator {
   }
 
   /// Calculate Current, Reactive Power, and Apparent Power from Power, Voltage, and cos(θ)
-  ///
-  /// Inputs:
-  /// - [realPower] P in Watts (W)
-  /// - [voltage] V in Volts (V)
-  /// - [powerFactor] cos(θ), must be between 0 and 1
-  ///
-  /// Returns:
-  /// - Apparent Power S = P / PF (VA)
-  /// - Current I = S / V = P / (V × PF) (A)
-  /// - Reactive Power Q = √(S² - P²) = S × sin(θ) (VAR)
   static PowerFactorResult calculateFromPVandCos(
-    double realPower,
-    double voltage,
-    double powerFactor,
-  ) {
-    if (realPower < 0) {
-      return PowerFactorResult(note: 'Power (P) must be positive.');
+      double realPower,
+      double voltage,
+      double powerFactor,
+      ) {
+    // Input validation checks (simplified, detailed checks are in the service)
+    if (realPower <= 0) {
+      return const PowerFactorResult(
+        note: 'Real Power (P) must be positive and non-zero.',
+      );
     }
     if (voltage <= 0) {
-      return PowerFactorResult(
+      return const PowerFactorResult(
         note: 'Voltage (V) must be positive and non-zero.',
       );
     }
     if (powerFactor <= 0 || powerFactor > 1) {
-      return PowerFactorResult(
+      return const PowerFactorResult(
         note: 'Power Factor (cos θ) must be between 0 and 1.',
       );
     }
 
+    // Calculation logic
     final apparentPower = realPower / powerFactor;
     final current = apparentPower / voltage;
     final sinTheta = math.sqrt(1 - (powerFactor * powerFactor));
@@ -88,6 +117,8 @@ class PowerFactorCalculator {
       note: 'Calculated from P, V, and cos(θ)',
     );
   }
+
+  static double powerFactorToPercent(double pf) => pf * 100;
 
   static String classifyPowerFactor(double powerFactor) {
     if (powerFactor >= 0.95) return 'Excellent';
@@ -104,16 +135,5 @@ class PowerFactorCalculator {
     } else {
       return 'poor — correction recommended';
     }
-  }
-
-  static String formatNumber(double value) {
-    if (value.abs() >= 1000) {
-      return value.toStringAsFixed(2);
-    }
-    return value.toStringAsFixed(3);
-  }
-
-  static double powerFactorToPercent(double powerFactor) {
-    return (powerFactor * 100).clamp(0.0, 100.0);
   }
 }

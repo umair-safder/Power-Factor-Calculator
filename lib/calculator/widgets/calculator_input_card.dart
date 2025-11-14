@@ -44,11 +44,11 @@ class CalculatorInputCard extends StatelessWidget {
               onSubmitted: controller.calculate,
             ),
             const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: controller.calculate,
-              icon: const Icon(Icons.calculate),
-              label: const Text('Calculate'),
-            ),
+            // ElevatedButton.icon(
+            //   onPressed: controller.calculate,
+            //   icon: const Icon(Icons.calculate),
+            //   label: const Text('Calculate'),
+            // ),
           ],
         ),
       ),
